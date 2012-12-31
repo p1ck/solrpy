@@ -76,24 +76,28 @@ class SolrPaginator:
         try:
             int(page_num)
         except:
-            raise 'PageNotAnInteger'
+            raise TypeError('The page number provided is not an integer.')
 
         if page_num not in self.page_range:
-            raise 'EmptyPage', 'That page does not exist.'
+            raise IndexError('The page number provided does not exist.')
 
         # Page 1 starts at 0; take one off before calculating
         start = (page_num - 1) * self.page_size
         new_result = self._fetch_page(start=start)
-        return SolrPage(new_result.results, page_num, self)
+        return SolrPage(new_result.results, page_num, self, 
+                        highlighting=getattr(new_result, 'highlighting', None),
+                        facet_counts=getattr(new_result, 'facet_counts', None))
 
 
 class SolrPage:
     """A single Paginator-style page."""
 
-    def __init__(self, result, page_num, paginator):
+    def __init__(self, result, page_num, paginator, highlighting, facet_counts):
         self.result = result
         self.number = page_num
         self.paginator = paginator
+        self.highlighting = highlighting
+        self.facet_counts = facet_counts
 
     @property
     def object_list(self):
